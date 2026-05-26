@@ -1,0 +1,26 @@
+name: My First Pipeline
+
+# 1. The Trigger: When should this run?
+on: 
+  push:
+    branches:
+      - main
+
+# 2. The Jobs: What should the robot do?
+jobs:
+  test_my_code:
+    # We are renting a temporary, free Linux server from GitHub
+    runs-on: ubuntu-latest 
+
+    # 3. The Steps: The exact commands to run on that server
+    steps:
+      - name: Step 1 - Download my code onto the server
+        uses: actions/checkout@v4
+
+      - name: Step 2 - Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Step 3 - Run the application
+        run: python app.py
