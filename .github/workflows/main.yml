@@ -6,9 +6,11 @@ on:
       - main
 
 jobs:
+  # ==========================================
+  # JOB 1: Build the Docker Image
+  # ==========================================
   build_and_push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Step 1 - Download code
         uses: actions/checkout@v4
@@ -29,3 +31,30 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo:${{ github.sha }}
+
+  # ==========================================
+  # JOB 2: Deploy to Kubernetes
+  # ==========================================
+  deploy_to_kubernetes:
+    needs: build_and_push # This tells GitHub to wait for JOB 1 to finish successfully
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+  
+      # Log into Azure using your existing secrets
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+  
+      # Get the connection credentials for your AKS cluster
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials --resource-group demo-rg-prod --name demo-aks-prod --overwrite-existing
+  
+      # Deploy the YAML file to Kubernetes
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl rollout restart deployment/python-app-deployment
