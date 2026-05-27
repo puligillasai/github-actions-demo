@@ -1,5 +1,9 @@
-def run_service():
-    print("The backend service is running successfully!")
+import http.server
+import socketserver
 
-if __name__ == "__main__":
-    run_service()
+PORT = 80
+Handler = http.server.SimpleHTTPRequestHandler
+
+print(f"The backend service is running successfully on port {PORT}!")
+with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    httpd.serve_forever()
